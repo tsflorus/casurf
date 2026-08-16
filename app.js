@@ -6,6 +6,7 @@ const emojiEl = document.getElementById("result-emoji");
 const messageEl = document.getElementById("result-message");
 const spotEl = document.getElementById("result-spot");
 const detailsEl = document.getElementById("result-details");
+const geolocateBtn = document.getElementById("geolocate-btn");
 
 const LEVELS = [
   { max: 20, label: "ça surf pas", emoji: "😴", bg: "#3d4b58" },
@@ -30,6 +31,41 @@ document.addEventListener("click", (e) => {
   if (!suggestionsEl.contains(e.target) && e.target !== input) {
     hideSuggestions();
   }
+});
+
+geolocateBtn.addEventListener("click", () => {
+  if (!navigator.geolocation) {
+    showStatus("La géolocalisation n'est pas disponible sur ce navigateur.");
+    return;
+  }
+
+  geolocateBtn.disabled = true;
+  geolocateBtn.textContent = "Localisation...";
+  resultEl.classList.add("hidden");
+  showStatus("Récupération de ta position...");
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      geolocateBtn.disabled = false;
+      geolocateBtn.textContent = "📍 Utiliser ma position";
+      selectLocation({
+        name: "Ma position",
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      });
+    },
+    (error) => {
+      geolocateBtn.disabled = false;
+      geolocateBtn.textContent = "📍 Utiliser ma position";
+      const messages = {
+        1: "Géolocalisation refusée. Autorise-la dans ton navigateur ou tape une loc à la main.",
+        2: "Position indisponible pour le moment.",
+        3: "La géolocalisation a mis trop de temps à répondre.",
+      };
+      showStatus(messages[error.code] || "Impossible de récupérer ta position.");
+    },
+    { timeout: 10000 }
+  );
 });
 
 async function searchLocations(query) {

@@ -68,6 +68,29 @@ h1 {
   z-index: 10;
 }
 
+.geolocate-btn {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.geolocate-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.geolocate-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .suggestions li {
   padding: 0.7rem 1rem;
   text-align: left;
