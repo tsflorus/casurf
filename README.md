@@ -11,7 +11,7 @@ App ultra basique : tu tapes une loc, elle te dit si ça surf.
   - **ça surf pas**
   - **ça surf vite fait**
   - **ça surf**
-  - **ça surf de fou**
+  - **NON MAIS WTF LES AMIS ?!?!?!**
 
 C'est volontairement approximatif : l'idée est d'avoir un visuel + message en un coup d'œil, pas une prévision pro.
 
