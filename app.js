@@ -17,9 +17,10 @@ const spotsListEl = document.getElementById("spots-list");
 
 const LEVELS = [
   { max: 20, label: "ça surf pas", emoji: "😴", bg: "#3d4b58" },
-  { max: 45, label: "ça surf vite fait", emoji: "🏄", bg: "#2a6f97" },
-  { max: 70, label: "ça surf", emoji: "🌊", bg: "#1f8a70" },
-  { max: Infinity, label: "NON MAIS WTF LES AMIS ?!?!?!", emoji: "🔥", bg: "#d1495b" },
+  { max: 40, label: "ça surf vite fait", emoji: "🏄", bg: "#2a6f97" },
+  { max: 60, label: "ça surf", emoji: "🌊", bg: "#1f8a70" },
+  { max: 80, label: "ça surf de fou", emoji: "🔥", bg: "#d1495b" },
+  { max: Infinity, label: "NON MAIS WTF LES AMIS ?!?!?!", emoji: "🤯", bg: "#c2185b" },
 ];
 
 const FAMOUS_SPOTS = [
