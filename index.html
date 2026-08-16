@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ça surf ?</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>🌊 ça surf ?</h1>
+
+    <div class="search-box">
+      <input id="location-input" type="text" placeholder="Nom du spot ou de la ville (ex: Hossegor)" autocomplete="off">
+      <ul id="suggestions" class="suggestions hidden"></ul>
+    </div>
+
+    <div id="status" class="status hidden"></div>
+
+    <section id="result" class="result hidden">
+      <div class="emoji" id="result-emoji">🌊</div>
+      <div class="message" id="result-message">ça surf</div>
+      <div class="spot-name" id="result-spot"></div>
+      <div class="details" id="result-details"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

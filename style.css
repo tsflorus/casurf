@@ -1,0 +1,134 @@
+:root {
+  --bg: #0b2340;
+  --bg-flat: #4a5a6a;
+  --bg-small: #2a6f97;
+  --bg-good: #1f8a70;
+  --bg-epic: #d1495b;
+  --card-bg: rgba(255, 255, 255, 0.08);
+  --text: #f4f7fb;
+  --text-dim: #b8c4d0;
+  --transition: background 0.6s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+main {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-box {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+#location-input {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  font-size: 1.1rem;
+  border-radius: 0.75rem;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.95);
+  color: #12202e;
+}
+
+.suggestions {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.suggestions li {
+  padding: 0.7rem 1rem;
+  text-align: left;
+  color: #12202e;
+  cursor: pointer;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #eee;
+}
+
+.suggestions li:last-child {
+  border-bottom: none;
+}
+
+.suggestions li:hover {
+  background: #f0f4f8;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.status {
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+
+.result {
+  background: var(--card-bg);
+  border-radius: 1.25rem;
+  padding: 2rem 1.5rem;
+}
+
+.emoji {
+  font-size: 4rem;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.message {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.spot-name {
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+
+.details {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.details span {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--text);
+  font-weight: 600;
+}
