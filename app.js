@@ -91,8 +91,43 @@ async function fetchConditions(lat, lon) {
   const waveHeight = marine.hourly.wave_height[nowIndex];
   const wavePeriod = marine.hourly.wave_period[nowIndex];
   const windSpeed = wind.current.wind_speed_10m;
+  const tideCoefficient = tideCoefficientNow();
 
-  return { waveHeight, wavePeriod, windSpeed };
+  return { waveHeight, wavePeriod, windSpeed, tideCoefficient };
+}
+
+// Open-Meteo n'a pas de données de marée (ce sont des prédictions harmoniques
+// propres à chaque station, pas un modèle météo). Il n'existe pas d'API de
+// marée mondiale gratuite et sans clé, donc on approxime le "coefficient de
+// marée" (à la SHOM : vive-eau/morte-eau) à partir de la phase lunaire, ce
+// qui est valable partout mais reste une estimation, pas un horaire de marée.
+function moonPhaseFraction(date) {
+  const synodicMonth = 29.530588853; // jours
+  const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
+  const diffDays = (date.getTime() - knownNewMoon) / 86400000;
+  let phase = (diffDays % synodicMonth) / synodicMonth;
+  if (phase < 0) phase += 1;
+  return phase; // 0 = nouvelle lune, 0.5 = pleine lune
+}
+
+function tideCoefficientNow() {
+  const phase = moonPhaseFraction(new Date());
+  const coeff = 70 + 50 * Math.cos(4 * Math.PI * phase);
+  return Math.round(Math.max(20, Math.min(120, coeff)));
+}
+
+function tideLabel(coeff) {
+  if (coeff >= 90) return "vive-eau";
+  if (coeff >= 45) return "moyenne";
+  return "morte-eau";
+}
+
+// Léger bonus/malus : les grandes marées bougent bien l'eau (généralement
+// favorable) mais deviennent trop rapides/creuses aux extrêmes ; les petites
+// marées sont souvent molles. Poids volontairement faible face à la houle/vent.
+function tideBonus(coeff) {
+  const distanceFromIdeal = Math.abs(coeff - 80);
+  return Math.max(-8, 8 - distanceFromIdeal * 0.2);
 }
 
 function closestHourIndex(times) {
@@ -114,18 +149,19 @@ function windFactor(windSpeed) {
   return Math.max(0.2, Math.min(1, 1 - (windSpeed - 12) * 0.03));
 }
 
-function computeScore(waveHeight, wavePeriod, windSpeed) {
+function computeScore(waveHeight, wavePeriod, windSpeed, tideCoefficient) {
   const sizeScore = Math.max(0, Math.min(70, waveHeight * 45));
   const periodScore = Math.max(0, Math.min(20, (wavePeriod - 4) * 2));
-  return Math.max(0, Math.min(100, (sizeScore + periodScore) * windFactor(windSpeed)));
+  const base = (sizeScore + periodScore) * windFactor(windSpeed);
+  return Math.max(0, Math.min(100, base + tideBonus(tideCoefficient)));
 }
 
 function pickLevel(score) {
   return LEVELS.find((l) => score < l.max);
 }
 
-function renderResult(place, { waveHeight, wavePeriod, windSpeed }) {
-  const score = computeScore(waveHeight, wavePeriod, windSpeed);
+function renderResult(place, { waveHeight, wavePeriod, windSpeed, tideCoefficient }) {
+  const score = computeScore(waveHeight, wavePeriod, windSpeed, tideCoefficient);
   const level = pickLevel(score);
 
   document.body.style.background = level.bg;
@@ -136,6 +172,7 @@ function renderResult(place, { waveHeight, wavePeriod, windSpeed }) {
     <div>Houle<span>${waveHeight.toFixed(1)} m</span></div>
     <div>Période<span>${wavePeriod.toFixed(0)} s</span></div>
     <div>Vent<span>${windSpeed.toFixed(0)} km/h</span></div>
+    <div>Marée (est.)<span>${tideCoefficient} · ${tideLabel(tideCoefficient)}</span></div>
   `;
   resultEl.classList.remove("hidden");
 }
