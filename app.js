@@ -107,7 +107,10 @@ function renderSpotRow(spot) {
   li.innerHTML = `
     <span class="spot-row-emoji">⏳</span>
     <span class="spot-row-name">${spot.name}</span>
-    <span class="spot-row-message">chargement...</span>
+    <span class="spot-row-right">
+      <span class="spot-row-label">chargement...</span>
+      <span class="spot-row-conditions"></span>
+    </span>
   `;
   li.addEventListener("click", () => {
     switchTab("search");
@@ -141,11 +144,12 @@ async function loadSpotsList() {
         const level = pickLevel(score);
         row.style.setProperty("--row-color", level.bg);
         row.querySelector(".spot-row-emoji").textContent = level.emoji;
-        row.querySelector(".spot-row-message").textContent =
-          `${level.label} · ${conditions.waveHeight.toFixed(1)}m ${conditions.wavePeriod.toFixed(0)}s · ${conditions.windSpeed.toFixed(0)}km/h`;
+        row.querySelector(".spot-row-label").textContent = level.label;
+        row.querySelector(".spot-row-conditions").textContent =
+          `${conditions.waveHeight.toFixed(1)}m ${conditions.wavePeriod.toFixed(0)}s · ${conditions.windSpeed.toFixed(0)}km/h`;
       } catch (err) {
         row.querySelector(".spot-row-emoji").textContent = "⚠️";
-        row.querySelector(".spot-row-message").textContent = "indisponible";
+        row.querySelector(".spot-row-label").textContent = "indisponible";
       }
     })
   );

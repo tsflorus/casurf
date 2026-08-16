@@ -152,11 +152,22 @@ h1 {
   min-width: 6rem;
 }
 
-.spot-row-message {
-  color: var(--text-dim);
-  font-size: 0.85rem;
+.spot-row-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
   text-align: right;
   margin-left: auto;
+}
+
+.spot-row-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.spot-row-conditions {
+  color: var(--text-dim);
+  font-size: 0.78rem;
 }
 
 .suggestions li {
