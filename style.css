@@ -170,6 +170,82 @@ h1 {
   font-size: 0.78rem;
 }
 
+.info-card {
+  background: var(--card-bg);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.info-card h2 {
+  font-size: 1.1rem;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.info-card h2:first-child {
+  margin-top: 0;
+}
+
+.info-card p {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0.5rem 0;
+}
+
+.info-card a {
+  color: var(--text);
+}
+
+.tier-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tier-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.tier-emoji {
+  font-size: 1.2rem;
+}
+
+.tier-label {
+  font-weight: 600;
+}
+
+.tier-range {
+  color: var(--text-dim);
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+.factor-list {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.factor-list li {
+  margin-bottom: 0.5rem;
+}
+
+.factor-list strong {
+  color: var(--text);
+}
+
 .suggestions li {
   padding: 0.7rem 1rem;
   text-align: left;

@@ -11,6 +11,7 @@ const tabButtons = document.querySelectorAll(".tab-btn");
 const tabPanels = {
   search: document.getElementById("tab-search"),
   spots: document.getElementById("tab-spots"),
+  info: document.getElementById("tab-info"),
 };
 const spotsListEl = document.getElementById("spots-list");
 
