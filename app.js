@@ -7,12 +7,33 @@ const messageEl = document.getElementById("result-message");
 const spotEl = document.getElementById("result-spot");
 const detailsEl = document.getElementById("result-details");
 const geolocateBtn = document.getElementById("geolocate-btn");
+const tabButtons = document.querySelectorAll(".tab-btn");
+const tabPanels = {
+  search: document.getElementById("tab-search"),
+  spots: document.getElementById("tab-spots"),
+};
+const spotsListEl = document.getElementById("spots-list");
 
 const LEVELS = [
   { max: 20, label: "ça surf pas", emoji: "😴", bg: "#3d4b58" },
   { max: 45, label: "ça surf vite fait", emoji: "🏄", bg: "#2a6f97" },
   { max: 70, label: "ça surf", emoji: "🌊", bg: "#1f8a70" },
   { max: Infinity, label: "ça surf de fou", emoji: "🔥", bg: "#d1495b" },
+];
+
+const FAMOUS_SPOTS = [
+  { name: "Hossegor", latitude: 43.665, longitude: -1.44 },
+  { name: "Biarritz", latitude: 43.4832, longitude: -1.5586 },
+  { name: "Lacanau", latitude: 45.0022, longitude: -1.2015 },
+  { name: "Seignosse", latitude: 43.704, longitude: -1.437 },
+  { name: "Capbreton", latitude: 43.642, longitude: -1.439 },
+  { name: "Anglet", latitude: 43.489, longitude: -1.524 },
+  { name: "Mimizan", latitude: 44.216, longitude: -1.298 },
+  { name: "La Torche", latitude: 47.839, longitude: -4.348 },
+  { name: "Nazaré", latitude: 39.6033, longitude: -9.0705 },
+  { name: "Ericeira", latitude: 38.963, longitude: -9.416 },
+  { name: "Pipeline", latitude: 21.665, longitude: -158.053 },
+  { name: "Uluwatu", latitude: -8.829, longitude: 115.088 },
 ];
 
 let debounceTimer = null;
@@ -67,6 +88,68 @@ geolocateBtn.addEventListener("click", () => {
     { timeout: 10000 }
   );
 });
+
+tabButtons.forEach((btn) => {
+  btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(tab) {
+  tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tab));
+  Object.entries(tabPanels).forEach(([key, el]) => el.classList.toggle("hidden", key !== tab));
+  if (tab === "spots") loadSpotsList();
+}
+
+let spotsLoaded = false;
+
+function renderSpotRow(spot) {
+  const li = document.createElement("li");
+  li.className = "spot-row";
+  li.innerHTML = `
+    <span class="spot-row-emoji">⏳</span>
+    <span class="spot-row-name">${spot.name}</span>
+    <span class="spot-row-message">chargement...</span>
+  `;
+  li.addEventListener("click", () => {
+    switchTab("search");
+    selectLocation(spot);
+  });
+  return li;
+}
+
+async function loadSpotsList() {
+  if (spotsLoaded) return;
+  spotsLoaded = true;
+
+  spotsListEl.innerHTML = "";
+  const rows = FAMOUS_SPOTS.map((spot) => {
+    const row = renderSpotRow(spot);
+    spotsListEl.appendChild(row);
+    return row;
+  });
+
+  await Promise.all(
+    FAMOUS_SPOTS.map(async (spot, i) => {
+      const row = rows[i];
+      try {
+        const conditions = await fetchConditions(spot.latitude, spot.longitude);
+        const score = computeScore(
+          conditions.waveHeight,
+          conditions.wavePeriod,
+          conditions.windSpeed,
+          conditions.tideCoefficient
+        );
+        const level = pickLevel(score);
+        row.style.setProperty("--row-color", level.bg);
+        row.querySelector(".spot-row-emoji").textContent = level.emoji;
+        row.querySelector(".spot-row-message").textContent =
+          `${level.label} · ${conditions.waveHeight.toFixed(1)}m ${conditions.wavePeriod.toFixed(0)}s · ${conditions.windSpeed.toFixed(0)}km/h`;
+      } catch (err) {
+        row.querySelector(".spot-row-emoji").textContent = "⚠️";
+        row.querySelector(".spot-row-message").textContent = "indisponible";
+      }
+    })
+  );
+}
 
 async function searchLocations(query) {
   try {

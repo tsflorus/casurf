@@ -91,6 +91,74 @@ h1 {
   cursor: default;
 }
 
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--text);
+}
+
+.spots-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.spot-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--card-bg);
+  border-left: 4px solid var(--row-color, transparent);
+  cursor: pointer;
+}
+
+.spot-row:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.spot-row-emoji {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  width: 1.6rem;
+  text-align: center;
+}
+
+.spot-row-name {
+  font-weight: 600;
+  flex-shrink: 0;
+  min-width: 6rem;
+}
+
+.spot-row-message {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-align: right;
+  margin-left: auto;
+}
+
 .suggestions li {
   padding: 0.7rem 1rem;
   text-align: left;
