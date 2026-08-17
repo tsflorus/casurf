@@ -270,13 +270,16 @@ function closestHourIndex(times) {
 }
 
 function windFactor(windSpeed) {
-  if (windSpeed <= 12) return 1;
-  return Math.max(0.2, Math.min(1, 1 - (windSpeed - 12) * 0.03));
+  if (windSpeed <= 10) return 1;
+  return Math.max(0.25, Math.min(1, 1 - (windSpeed - 10) * 0.035));
 }
 
+// En dessous de 0,3 m ou 6 s de période, c'est du clapot, pas une houle
+// surfable : ces deux facteurs ne rapportent donc rien tant qu'on n'a pas
+// dépassé ce plancher, plutôt que de monter en score dès la moindre ride.
 function computeScore(waveHeight, wavePeriod, windSpeed, tideCoefficient) {
-  const sizeScore = Math.max(0, Math.min(70, waveHeight * 45));
-  const periodScore = Math.max(0, Math.min(20, (wavePeriod - 4) * 2));
+  const sizeScore = Math.max(0, Math.min(65, (waveHeight - 0.3) * 55));
+  const periodScore = Math.max(0, Math.min(25, (wavePeriod - 6) * 3));
   const base = (sizeScore + periodScore) * windFactor(windSpeed);
   return Math.max(0, Math.min(100, base + tideBonus(tideCoefficient)));
 }
