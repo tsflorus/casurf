@@ -23,6 +23,13 @@ const LEVELS = [
   { max: Infinity, label: "NON MAIS WTF LES AMIS ?!?!?!", emoji: "🤯", bg: "#c2185b" },
 ];
 
+// Clé Stormglass fournie par l'utilisateur — visible côté client puisque
+// l'app est 100% statique (pas de backend pour la cacher). Le tier gratuit
+// (~10 requêtes/jour) est réservé à la vue détaillée d'un seul spot ; la
+// liste des spots (12 appels en parallèle) reste sur l'estimation lunaire
+// pour ne pas l'épuiser d'un coup.
+const STORMGLASS_API_KEY = "2ff70c7a-9a6a-11f1-9ee9-0242ac120004-2ff70cde-9a6a-11f1-9ee9-0242ac120004";
+
 const FAMOUS_SPOTS = [
   { name: "Hossegor", latitude: 43.665, longitude: -1.44 },
   { name: "Biarritz", latitude: 43.4832, longitude: -1.5586 },
@@ -141,7 +148,7 @@ async function loadSpotsList() {
           conditions.waveHeight,
           conditions.wavePeriod,
           conditions.windSpeed,
-          conditions.tideCoefficient
+          conditions.tide.bonus
         );
         const level = pickLevel(score);
         row.style.setProperty("--row-color", level.bg);
@@ -196,7 +203,7 @@ async function selectLocation(place) {
   showStatus(`Récupération des conditions à ${place.name}...`);
 
   try {
-    const conditions = await fetchConditions(place.latitude, place.longitude);
+    const conditions = await fetchConditions(place.latitude, place.longitude, { realTide: true });
     hideStatus();
     renderResult(place, conditions);
   } catch (err) {
@@ -204,7 +211,7 @@ async function selectLocation(place) {
   }
 }
 
-async function fetchConditions(lat, lon) {
+async function fetchConditions(lat, lon, { realTide = false } = {}) {
   const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&hourly=wave_height,wave_period&timezone=auto`;
   const windUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=wind_speed_10m&wind_speed_unit=kmh&timezone=auto`;
 
@@ -216,16 +223,55 @@ async function fetchConditions(lat, lon) {
   const waveHeight = marine.hourly.wave_height[nowIndex];
   const wavePeriod = marine.hourly.wave_period[nowIndex];
   const windSpeed = wind.current.wind_speed_10m;
-  const tideCoefficient = tideCoefficientNow();
+  const tide = realTide ? await getTideInfo(lat, lon) : estimateTideInfo();
 
-  return { waveHeight, wavePeriod, windSpeed, tideCoefficient };
+  return { waveHeight, wavePeriod, windSpeed, tide };
+}
+
+// Vraie marée via Stormglass (horaires officiels de pleine/basse mer).
+// Fenêtre large (-12h/+36h) pour être sûr d'avoir un extremum avant et
+// après "maintenant", peu importe où on est dans le cycle de marée.
+async function fetchRealTide(lat, lon) {
+  const now = new Date();
+  const start = new Date(now.getTime() - 12 * 3600 * 1000).toISOString();
+  const end = new Date(now.getTime() + 36 * 3600 * 1000).toISOString();
+  const url = `https://api.stormglass.io/v2/tide/extremes/point?lat=${lat}&lng=${lon}&start=${start}&end=${end}`;
+
+  const res = await fetch(url, { headers: { Authorization: STORMGLASS_API_KEY } });
+  if (!res.ok) throw new Error("stormglass request failed");
+  const data = await res.json();
+
+  const extremes = (data.data || [])
+    .map((e) => ({ time: new Date(e.time), height: e.height, type: e.type }))
+    .sort((a, b) => a.time - b.time);
+
+  const prev = [...extremes].reverse().find((e) => e.time <= now);
+  const next = extremes.find((e) => e.time > now);
+  if (!prev || !next) throw new Error("no surrounding tide extremes");
+
+  const span = next.time - prev.time;
+  const phase = span > 0 ? (now - prev.time) / span : 0.5; // 0/1 = extremum, 0.5 = mi-marée
+  const rising = next.type === "high";
+  const timeLabel = next.time.toLocaleTimeString("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
+  const extremeLabel = next.type === "high" ? "pleine mer" : "basse mer";
+
+  return {
+    source: "stormglass",
+    bonus: tidePhaseBonus(phase),
+    label: rising ? "montante" : "descendante",
+    detail: `${extremeLabel} à ${timeLabel} UTC (${next.height.toFixed(1)} m)`,
+  };
 }
 
 // Open-Meteo n'a pas de données de marée (ce sont des prédictions harmoniques
-// propres à chaque station, pas un modèle météo). Il n'existe pas d'API de
-// marée mondiale gratuite et sans clé, donc on approxime le "coefficient de
-// marée" (à la SHOM : vive-eau/morte-eau) à partir de la phase lunaire, ce
-// qui est valable partout mais reste une estimation, pas un horaire de marée.
+// propres à chaque station, pas un modèle météo), et une API de marée réelle
+// gratuite et illimitée n'existe pas. Repli : le "coefficient de marée" (à la
+// SHOM : vive-eau/morte-eau) approximé par la phase lunaire — valable partout,
+// sans clé, mais une estimation, pas un horaire de marée officiel.
 function moonPhaseFraction(date) {
   const synodicMonth = 29.530588853; // jours
   const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
@@ -255,6 +301,32 @@ function tideBonus(coeff) {
   return Math.max(-8, 8 - distanceFromIdeal * 0.2);
 }
 
+// Même logique que tideBonus mais basée sur la vraie position dans le cycle
+// de marée (0.5 = mi-marée, souvent le plus favorable ; proche d'un
+// extremum = eau qui bouge peu, ou au contraire trop vite juste après).
+function tidePhaseBonus(phase) {
+  const distanceFromMid = Math.abs(phase - 0.5);
+  return Math.max(-8, 8 - distanceFromMid * 32);
+}
+
+function estimateTideInfo() {
+  const coeff = tideCoefficientNow();
+  return {
+    source: "estimate",
+    bonus: tideBonus(coeff),
+    label: tideLabel(coeff),
+    detail: `coefficient ${coeff} (estimation)`,
+  };
+}
+
+async function getTideInfo(lat, lon) {
+  try {
+    return await fetchRealTide(lat, lon);
+  } catch (err) {
+    return estimateTideInfo();
+  }
+}
+
 function closestHourIndex(times) {
   const now = Date.now();
   let bestIndex = 0;
@@ -277,19 +349,19 @@ function windFactor(windSpeed) {
 // En dessous de 0,3 m ou 6 s de période, c'est du clapot, pas une houle
 // surfable : ces deux facteurs ne rapportent donc rien tant qu'on n'a pas
 // dépassé ce plancher, plutôt que de monter en score dès la moindre ride.
-function computeScore(waveHeight, wavePeriod, windSpeed, tideCoefficient) {
+function computeScore(waveHeight, wavePeriod, windSpeed, tideBonusValue) {
   const sizeScore = Math.max(0, Math.min(65, (waveHeight - 0.3) * 55));
   const periodScore = Math.max(0, Math.min(25, (wavePeriod - 6) * 3));
   const base = (sizeScore + periodScore) * windFactor(windSpeed);
-  return Math.max(0, Math.min(100, base + tideBonus(tideCoefficient)));
+  return Math.max(0, Math.min(100, base + tideBonusValue));
 }
 
 function pickLevel(score) {
   return LEVELS.find((l) => score < l.max);
 }
 
-function renderResult(place, { waveHeight, wavePeriod, windSpeed, tideCoefficient }) {
-  const score = computeScore(waveHeight, wavePeriod, windSpeed, tideCoefficient);
+function renderResult(place, { waveHeight, wavePeriod, windSpeed, tide }) {
+  const score = computeScore(waveHeight, wavePeriod, windSpeed, tide.bonus);
   const level = pickLevel(score);
 
   document.body.style.background = level.bg;
@@ -300,7 +372,7 @@ function renderResult(place, { waveHeight, wavePeriod, windSpeed, tideCoefficien
     <div>Houle<span>${waveHeight.toFixed(1)} m</span></div>
     <div>Période<span>${wavePeriod.toFixed(0)} s</span></div>
     <div>Vent<span>${windSpeed.toFixed(0)} km/h</span></div>
-    <div>Marée (est.)<span>${tideCoefficient} · ${tideLabel(tideCoefficient)}</span></div>
+    <div>Marée${tide.source === "estimate" ? " (est.)" : ""}<span>${tide.label}</span><small>${tide.detail}</small></div>
   `;
   resultEl.classList.remove("hidden");
 }
