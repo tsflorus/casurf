@@ -238,7 +238,10 @@ async function fetchRealTide(lat, lon) {
   const url = `https://api.stormglass.io/v2/tide/extremes/point?lat=${lat}&lng=${lon}&start=${start}&end=${end}`;
 
   const res = await fetch(url, { headers: { Authorization: STORMGLASS_API_KEY } });
-  if (!res.ok) throw new Error("stormglass request failed");
+  if (!res.ok) {
+    // Stormglass renvoie 402/429 quand le quota gratuit est épuisé.
+    throw new Error(res.status === 402 || res.status === 429 ? "quota" : "error");
+  }
   const data = await res.json();
 
   const extremes = (data.data || [])
@@ -247,7 +250,7 @@ async function fetchRealTide(lat, lon) {
 
   const prev = [...extremes].reverse().find((e) => e.time <= now);
   const next = extremes.find((e) => e.time > now);
-  if (!prev || !next) throw new Error("no surrounding tide extremes");
+  if (!prev || !next) throw new Error("error");
 
   const span = next.time - prev.time;
   const phase = span > 0 ? (now - prev.time) / span : 0.5; // 0/1 = extremum, 0.5 = mi-marée
@@ -309,13 +312,16 @@ function tidePhaseBonus(phase) {
   return Math.max(-8, 8 - distanceFromMid * 32);
 }
 
-function estimateTideInfo() {
+function estimateTideInfo(fallbackReason) {
   const coeff = tideCoefficientNow();
+  let detail = `coefficient ${coeff}`;
+  if (fallbackReason === "quota") detail += " — quota Stormglass dépassé";
+  else if (fallbackReason === "error") detail += " — API marée indisponible";
   return {
     source: "estimate",
     bonus: tideBonus(coeff),
     label: tideLabel(coeff),
-    detail: `coefficient ${coeff} (estimation)`,
+    detail,
   };
 }
 
@@ -323,7 +329,7 @@ async function getTideInfo(lat, lon) {
   try {
     return await fetchRealTide(lat, lon);
   } catch (err) {
-    return estimateTideInfo();
+    return estimateTideInfo(err.message);
   }
 }
 

@@ -62,7 +62,7 @@
 
         <h2>Les sources</h2>
         <p>Houle et vent viennent des API gratuites <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (Marine + Forecast).</p>
-        <p>La marée utilise les vrais horaires de pleine/basse mer (<a href="https://stormglass.io/" target="_blank" rel="noopener">Stormglass</a>) quand tu regardes un spot précis (recherche, position, ou clic depuis la liste). Le tier gratuit de cette API est limité (quelques requêtes par jour), donc la liste "Spots" — qui interroge 12 spots d'un coup — reste sur une estimation par phase lunaire (coefficient vive-eau/morte-eau) pour ne pas l'épuiser. Si le quota Stormglass est dépassé, l'app retombe automatiquement sur cette même estimation.</p>
+        <p>La marée utilise les vrais horaires de pleine/basse mer (<a href="https://stormglass.io/" target="_blank" rel="noopener">Stormglass</a>) quand tu regardes un spot précis (recherche, position, ou clic depuis la liste). Le tier gratuit de cette API est limité (quelques requêtes par jour), donc la liste "Spots" — qui interroge 12 spots d'un coup — reste sur une estimation par phase lunaire (coefficient vive-eau/morte-eau) pour ne pas l'épuiser. Si le quota Stormglass est dépassé (ou l'API indisponible), l'app retombe automatiquement sur cette même estimation — et te le signale directement sous "Marée" plutôt que de faire comme si de rien n'était.</p>
         <p>Tout ça reste volontairement basique : pas d'orientation de spot, pas de bathymétrie. L'idée est d'avoir un indicateur rapide, pas une prévision pro.</p>
       </div>
     </section>
