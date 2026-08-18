@@ -8,6 +8,7 @@ App ultra basique : tu tapes une loc, elle te dit si ça surf.
 - Récupération de la houle (hauteur + période) via la [Marine API](https://open-meteo.com/en/docs/marine-weather-api) et du vent via la Forecast API, toutes deux Open-Meteo.
 - Vrais horaires de marée (pleine/basse mer) via [Stormglass](https://stormglass.io/) pour la vue détaillée d'un spot, avec repli sur un coefficient (vive-eau/morte-eau) estimé par phase lunaire si le quota gratuit est dépassé ou pour la liste "Spots".
 - Un score simple combine houle, période, vent et marée pour afficher un message :
+  - **Ouai OK Brice**
   - **ça surf pas**
   - **ça surf vite fait**
   - **ça surf**
